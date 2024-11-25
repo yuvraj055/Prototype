@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Assessment Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #2C3E50;
+            --secondary-color: #34495E;
+            --accent-color: #3498DB;
+            --success-color: #2ECC71;
+            --warning-color: #F1C40F;
+            --danger-color: #E74C3C;
+            --light-bg: #ECF0F1;
+        }
+
+        /* Login Page */
+        .login-container {
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-box {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.15);
+            width: 400px;
+        }
+
+        .login-box h2 {
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-color);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .login-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: none;
+            background: var(--light-bg);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            background: var(--primary-color);
+            color: white;
+            position: fixed;
+            padding-top: 1rem;
+            transition: width 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-item {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-item:hover {
+            background: var(--secondary-color);
+            padding-left: 2rem;
+        }
+
+        .nav-item.active {
+            background: var(--accent-color);
+        }
+
+        .main-content {
+            margin-left: 280px;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+
+        .section {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Forms and Inputs */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--accent-color);
+            outline: none;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+        }
+
+        th, td {
+            padding: 1rem;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: var(--light-bg);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* File Upload Styles */
+        .file-upload {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            margin-bottom: 1.5rem;
+        }
+
+        .file-upload:hover {
+            border-color: var(--accent-color);
+        }
+
+        .file-upload i {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .upload-progress {
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .upload-progress-bar {
+            height: 100%;
+            background: var(--success-color);
+            width: 0;
+            transition: width 0.3s;
+        }
+
+        /* Alert Styles */
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
+        <div class="login-box">
+            <h2>Security Assessment Tool</h2>
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="username" placeholder="Enter username">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" placeholder="Enter password">
+            </div>
+            <button class="login-btn" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard" id="dashboard">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Security Dashboard</h3>
+            </div>
+            <div class="nav-item active" onclick="showSection('overview')">
+                <i class="fas fa-home"></i> Overview
+            </div>
+            <div class="nav-item" onclick="showSection('network-discovery')">
+                <i class="fas fa-network-wired"></i> Network Discovery
+            </div>
+            <div class="nav-item" onclick="showSection('system-audit')">
+                <i class="fas fa-laptop-code"></i> System Audit
+            </div>
+            <div class="nav-item" onclick="showSection('file-checker')">
+                <i class="fas fa-file-alt"></i> File Checker
+            </div>
+            <div class="nav-item" onclick="showSection('passwordmanager.html')">
+                <i class="fas fa-key"></i> Password Manager
+            </div>
+            <div class="nav-item" onclick="showSection('log-monitoring')">
+                <i class="fas fa-clipboard-list"></i> Log Monitoring
+            </div>
+            <div class="nav-item" onclick="showSection('vulnerability-scan')">
+                <i class="fas fa-bug"></i> Vulnerability Scan
+            </div>
+            <div class="nav-item" onclick="showSection('reports')">
+                <i class="fas fa-chart-bar"></i> Reports
+            </div>
+            <div class="nav-item" onclick="showSection('settings')">
+                <i class="fas fa-cog"></i> Settings
+            </div>
+            <div class="nav-item" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="dashboard-header">
+                <h2>Welcome back, Admin</h2>
+                <div class="user-profile">
+                    <div class="user-avatar">A</div>
+                    <span>Admin User</span>
+                </div>
+            </div>
+
+            <!-- Overview Section -->
+            <!-- Overview Section (continued) -->
+            <div class="section active" id="overview">
+                <div class="card-container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Active Devices</h3>
+                            <div class="card-icon" style="background: var(--accent-color)">
+                                <i class="fas fa-laptop"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">24</div>
+                        <p>5 new devices today</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Security Alerts</h3>
+                            <div class="card-icon" style="background: var(--danger-color)">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">3</div>
+                        <p>2 critical alerts</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>System Health</h3>
+                            <div class="card-icon" style="background: var(--success-color)">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                        </div>
+                        <div class="card-value">98%</div>
+                        <p>All systems operational</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Recent Activities</h3>
+                    <div class="activity-feed">
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: var(--warning-color)">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div>
+                                <h4>New Security Alert</h4>
+                                <p>Unusual login attempt detected from IP: 192.168.1.45</p>
+                                <small>2 minutes ago</small>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon" style="background: var(--success-color)">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div>
+                                <h4>System Scan Completed</h4>
+                                <p>No vulnerabilities found in recent scan</p>
+                                <small>15 minutes ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Discovery Section -->
+            <div class="section" id="network-discovery">
+                <div class="card">
+                    <h3>Network Discovery</h3>
+                    <div class="form-group">
+                        <label>IP Range</label>
+                        <input type="text" placeholder="e.g., 192.168.1.1/24">
+                    </div>
+                    <div class="form-group">
+                        <label>Scan Type</label>
+                        <select>
+                            <option>Quick Scan</option>
+                            <option>Deep Scan</option>
+                            <option>Custom Scan</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="scanNetwork()">
+                        <i class="fas fa-search"></i> Start Scan
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>IP Address</th>
+                                <th>Status</th>
+                                <th>Device Type</th>
+                                <th>Operating System</th>
+                                <th>Last Seen</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="networkTable">
+                            <!-- Sample data -->
+                            <tr>
+                                <td>192.168.1.1</td>
+                                <td><span class="badge" style="background: var(--success-color)">Online</span></td>
+                                <td>Router</td>
+                                <td>RouterOS v6.48.3</td>
+                                <td>Now</td>
+                                <td>
+                                    <button class="btn btn-sm" onclick="showDeviceDetails()">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- File Checker Section with Enhanced Upload -->
+            <div class="section" id="file-checker">
+                <div class="card">
+                    <h3>File Integrity Checker</h3>
+                    
+                    <div class="file-upload" onclick="triggerFileUpload()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h4>Drag & Drop Files Here</h4>
+                        <p>or click to browse</p>
+                        <input type="file" id="fileInput" multiple style="display: none" onchange="handleFileUpload(event)">
+                        <div class="upload-progress">
+                            <div class="upload-progress-bar" id="uploadProgress"></div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success" style="display: none" id="uploadSuccess">
+                        <i class="fas fa-check-circle"></i>
+                        Files uploaded successfully!
+                    </div>
+
+                    <div class="form-group">
+                        <label>Scan Options</label>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" checked> Malware Detection
+                            </label>
+                            <label>
+                                <input type="checkbox" checked> Integrity Check
+                            </label>
+                            <label>
+                                <input type="checkbox"> Deep Analysis
+                            </label>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Status</th>
+                                <th>Last Checked</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fileTable">
+                            <!-- Sample data -->
+                            <tr>
+                                <td>document.pdf</td>
+                                <td>PDF</td>
+                                <td>2.5 MB</td>
+                                <td><span class="badge" style="background: var(--success-color)">Clean</span></td>
+                                <td>Just now</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <button class="btn btn-sm">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Add other sections here... -->
+
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="deviceModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('deviceModal')">&times;</span>
+            <h3>Device Details</h3>
+            <!-- Device details content -->
+        </div>
+    </div>
+    <!-- Password Manager Section -->
+<div class="section" id="password-manager" window.location.href = "passwordmanager.html";>
+    <div class="card-container">
+        <!-- Password Strength Overview Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Password Health</h3>
+                <div class="card-icon" style="background: var(--success-color)">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+            </div>
+            <div class="card-value">85%</div>
+            <p>Overall password strength</p>
+        </div>
+        <!-- Vulnerable Passwords Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Vulnerable Passwords</h3>
+                <div class="card-icon" style="background: var(--danger-color)">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+            </div>
+            <div class="card-value">3</div>
+            <p>Passwords need attention</p>
+        </div>
+        <!-- Last Update Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Last Password Update</h3>
+                <div class="card-icon" style="background: var(--warning-color)">
+                    <i class="fas fa-clock"></i>
+                </div>
+            </div>
+            <div class="card-value">5d</div>
+            <p>Since last password change</p>
+        </div>
+    </div>
+
+    <!-- Password Management Tools -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3>Stored Passwords</h3>
+            <button class="btn" onclick="showAddPasswordModal()">
+                <i class="fas fa-plus"></i> Add New Password
+            </button>
+        </div>
+
+        <!-- Search and Filter -->
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="form-group" style="flex: 1;">
+                <div class="input-group">
+                    <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);"></i>
+                    <input type="text" placeholder="Search passwords..." style="padding-left: 2.5rem;">
+                </div>
+            </div>
+            <div class="form-group" style="width: 200px;">
+                <select>
+                    <option value="all">All Categories</option>
+                    <option value="work">Work</option>
+                    <option value="personal">Personal</option>
+                    <option value="finance">Finance</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Passwords Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Website</th>
+                        <th>Username</th>
+                        <th>Password</th>
+                        <th>Category</th>
+                        <th>Last Updated</th>
+                        <th>Strength</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-globe"></i>
+                                example.com
+                            </div>
+                        </td>
+                        <td>john.doe@email.com</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                ••••••••••
+                                <i class="fas fa-eye" style="cursor: pointer;"></i>
+                            </div>
+                        </td>
+                        <td><span class="badge" style="background: var(--accent-color)">Work</span></td>
+                        <td>2 days ago</td>
+                        <td>
+                            <div class="progress" style="background: #eee; height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 80%; height: 100%; background: var(--success-color);"></div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm" onclick="editPassword(1)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <!-- Add more password entries as needed -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Login functionality
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username && password) {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            }
+        }
+
+        function logout() {
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // File upload handling
+        function triggerFileUpload() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            const progress = document.getElementById('uploadProgress');
+            
+            // Simulate upload progress
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('uploadSuccess').style.display = 'flex';
+                    setTimeout(() => {
+                        document.getElementById('uploadSuccess').style.display = 'none';
+                    }, 3000);
+                } else {
+                    width++;
+                    progress.style.width = width + '%';
+                }
+            }, 20);
+
+            // Add files to table
+            const fileTable = document.getElementById('fileTable');
+            Array.from(files).forEach(file => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${file.name}</td>
+                    <td>${file.type || 'Unknown'}</td>
+                    <td>${(file.size / (1024 * 1024)).toFixed(2)} MB</td>
+                    <td><span class="badge" style="background: var(--warning-color)">Scanning...</span></td>
+                    <td>Just now</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="btn btn-sm">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </td>
+                `;
+                fileTable.appendChild(row);
+            });
+        }
+
+        // Modal handling
+        function showDeviceDetails() {
+            document.getElementById('deviceModal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Initialize dashboard in logged out state
+        document.getElementById('loginPage').style.display = 'flex';
+        document.getElementById('dashboard').style.display = 'none';
+    </script>
+</body>
+</html>
